@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#03070a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>J.A.R.V.I.S.</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="description" content="J.A.R.V.I.S. — Türkçe kişisel yapay zeka asistanı">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand">
+      <span class="logo">J.A.R.V.I.S.</span>
+      <span class="ver" id="ver">mobil</span>
+    </div>
+    <button class="link-pill" id="linkPill" title="Bağlantı">
+      <i class="dot" id="linkDot"></i><span id="linkText">BAĞLANIYOR</span>
+    </button>
+  </header>
+  <div id="banner" class="banner" hidden>
+    <span id="bannerText"></span>
+    <button id="bannerBtn" class="mini"></button>
+    <button id="bannerClose" class="x" aria-label="Kapat">×</button>
+  </div>
+
+  <!-- SOHBET -->
+  <section class="view active" id="view-chat">
+    <div class="reactor-wrap" id="reactorWrap">
+      <canvas id="reactor" width="260" height="260"></canvas>
+      <div class="state" id="stateText">HAZIR</div>
+    </div>
+    <div id="log" aria-live="polite"></div>
+    <form id="composer" autocomplete="off">
+      <textarea id="input" rows="1" placeholder="JARVIS'e yaz…" enterkeyhint="send"></textarea>
+      <button type="button" id="mic" class="round mic" aria-label="Konuş">
+        <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-2.1A7 7 0 0 0 19 12h-2Z"/></svg>
+      </button>
+      <button type="submit" id="send" class="round send" aria-label="Gönder">
+        <svg viewBox="0 0 24 24"><path d="M3 20.5 21 12 3 3.5v6.6L15 12 3 13.9v6.6Z"/></svg>
+      </button>
+    </form>
+  </section>
+
+  <!-- GÖREVLER / SİSTEM -->
+  <section class="view" id="view-tasks">
+    <div class="panel">
+      <div class="panel-h">SİSTEM <button class="mini" id="sysRefresh">YENİLE</button></div>
+      <pre id="sysInfo" class="mono">PC bağlantısı gerekiyor.</pre>
+    </div>
+    <div class="panel">
+      <div class="panel-h">ARKA PLAN GÖREVLERİ <button class="mini" id="taskRefresh">YENİLE</button></div>
+      <div id="taskList" class="tasks"><p class="muted">PC bağlantısı gerekiyor.</p></div>
+    </div>
+  </section>
+
+  <!-- KASK -->
+  <section class="view" id="view-helmet">
+    <div class="panel helmet">
+      <div class="panel-h">MARK KASK KONTROLÜ</div>
+      <div class="helmet-btns">
+        <button class="big danger" data-helmet="ac">KASK AÇ</button>
+        <button class="big cool" data-helmet="kapat">KASK KAPAT</button>
+      </div>
+      <button class="wide" data-helmet="durum">DURUM SORGULA</button>
+      <p id="helmetOut" class="mono out">—</p>
+      <p class="muted small">Önce PC üzerinden dener. PC'ye ulaşılamazsa ve Ayarlar'da kask IP'si girildiyse doğrudan ESP32'ye gönderir.</p>
+    </div>
+  </section>
+
+  <!-- AYARLAR -->
+  <section class="view" id="view-settings">
+    <div class="panel">
+      <div class="panel-h">ÇALIŞMA MODU</div>
+      <div class="seg" id="modeSeg">
+        <button data-mode="auto">OTOMATİK</button>
+        <button data-mode="pc">PC</button>
+        <button data-mode="cloud">BULUT</button>
+      </div>
+      <p class="muted small">Otomatik: PC açıksa bilgisayardaki JARVIS'i kullanır, değilse buluta geçer.</p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h">PC BAĞLANTISI</div>
+      <label>PC adresi<input id="pcUrl" placeholder="http://192.168.1.20:5000" inputmode="url"></label>
+      <label>Erişim anahtarı<input id="pcToken" placeholder="PC konsolunda yazan anahtar"></label>
+      <button class="wide" id="pcTest">BAĞLANTIYI TEST ET</button>
+      <p id="pcOut" class="mono out"></p>
+      <p class="muted small" id="mixedWarn" hidden>Bu sayfa https (GitHub Pages) üzerinden açık; tarayıcılar buradan evdeki http PC'ye bağlanmayı engelleyebilir. Çözüm: APK'yı kur ya da PC konsolundaki linki doğrudan aç.</p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h">BULUT BEYNİ</div>
+      <div class="seg" id="provSeg">
+        <button data-prov="gemini">GEMINI</button>
+        <button data-prov="openai">OPENAI</button>
+        <button data-prov="anthropic">CLAUDE</button>
+      </div>
+      <label>API anahtarı<input id="apiKey" type="password" placeholder="Anahtar sadece bu telefonda saklanır"></label>
+      <label>Model<input id="model" list="modelList" placeholder="model adı"><datalist id="modelList"></datalist></label>
+      <div class="row2">
+        <label class="check"><input type="checkbox" id="webSearch"> Web araması</label>
+        <button class="mini" id="listModels">MODELLERİ GETİR</button>
+      </div>
+      <p class="muted small" id="provHint"></p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h">SES</div>
+      <label class="check"><input type="checkbox" id="autoSpeak"> Cevapları sesli oku</label>
+      <label class="check"><input type="checkbox" id="pcVoice"> PC modunda JARVIS sesini (edge-tts) kullan</label>
+      <label class="check"><input type="checkbox" id="handsFree"> Okuma bitince tekrar dinle (eller serbest)</label>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h">KASK (DOĞRUDAN)</div>
+      <label>ESP32 IP<input id="helmetIp" placeholder="192.168.1.42" inputmode="url"></label>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h">TELEFON HAFIZASI <span class="muted small" id="memCount"></span></div>
+      <p class="muted small">Bulut modunda "hatırla …" ve "unut …" ile yönetilir. PC modunda PC'nin hafızası kullanılır.</p>
+      <ul id="memList" class="mem"></ul>
+      <div class="row2">
+        <button class="mini" id="exportData">YEDEK AL</button>
+        <button class="mini" id="importData">YEDEK YÜKLE</button>
+        <button class="mini warn" id="clearChat">SOHBETİ SİL</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json" hidden>
+    </div>
+    <div class="panel" id="installPanel">
+      <div class="panel-h">UYGULAMA OLARAK KUR</div>
+      <p class="muted small" id="installInfo">JARVIS'i ana ekrana ekleyince tam ekran, uygulama gibi açılır ve internet yokken de açılır.</p>
+      <button class="wide" id="installBtn">ANA EKRANA EKLE</button>
+    </div>
+    <p class="muted small center" id="about"></p>
+  </section>
+
+  <nav id="tabs">
+    <button data-view="chat" class="active"><svg viewBox="0 0 24 24"><path d="M4 4h16v12H7l-3 3V4Z"/></svg>SOHBET</button>
+    <button data-view="tasks"><svg viewBox="0 0 24 24"><path d="M4 5h16v2H4zm0 6h16v2H4zm0 6h10v2H4z"/></svg>SİSTEM</button>
+    <button data-view="helmet"><svg viewBox="0 0 24 24"><path d="M12 2C7 2 4 5.6 4 10v5l3 4h10l3-4v-5c0-4.4-3-8-8-8Zm-5 9 4 1v2H7Zm10 0v3h-4v-2Z"/></svg>KASK</button>
+    <button data-view="settings"><svg viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm8.6 4.6.1-1.1-.1-1.1 2.1-1.6-2-3.5-2.5 1a8 8 0 0 0-1.9-1.1L16 2h-4l-.4 2.7a8 8 0 0 0-1.9 1.1l-2.5-1-2 3.5 2.1 1.6-.1 1.1.1 1.1-2.1 1.6 2 3.5 2.5-1c.6.5 1.2.8 1.9 1.1L12 22h4l.4-2.7c.7-.3 1.3-.6 1.9-1.1l2.5 1 2-3.5-2.2-1.6Z"/></svg>AYAR</button>
+  </nav>
+</div>
+<div id="iosSheet" class="sheet" hidden>
+  <div class="sheet-card">
+    <div class="panel-h">iPHONE'A KURULUM</div>
+    <ol class="small">
+      <li>Safari'de alttaki <b>Paylaş</b> düğmesine dokun (kare ve yukarı ok).</li>
+      <li>Listeyi kaydırıp <b>Ana Ekrana Ekle</b>'yi seç.</li>
+      <li>Sağ üstte <b>Ekle</b>'ye dokun. JARVIS ikonu ana ekrana gelir.</li>
+    </ol>
+    <p class="muted small">Not: iPhone'da kurulum sadece Safari'den yapılabilir.</p>
+    <button class="wide" id="iosClose">TAMAM</button>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

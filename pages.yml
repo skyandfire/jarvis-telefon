@@ -1,0 +1,36 @@
+name: JARVIS PWA yayınla
+
+# Her gönderimde uygulamayı https://<kullanici>.github.io/<repo>/ adresine yayınlar.
+# İlk sefer: Settings → Pages → Build and deployment → Source: "GitHub Actions"
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - name: Yayın klasörünü hazırla
+        run: |
+          mkdir -p _site
+          cp -r index.html app.js style.css sw.js manifest.webmanifest icons .nojekyll _site/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
